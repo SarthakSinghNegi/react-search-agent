@@ -1,10 +1,11 @@
-import re
-from turtle import mode
+
+from typing import List
+from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 
 load_dotenv()
 from langchain.agents import create_agent
-from langchain.tools import tool
+# from langchain.tools import tool
 from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
 # from tavily import TavilyClient
@@ -32,18 +33,35 @@ from langchain_tavily import TavilySearch
 # searching the web if using inbuilt tavily by langchain
 
 
+class Source(BaseModel):
+    """Schema for a source used by the agent"""
+
+    url: str = Field(description="The URL of the source")
+
+
+class AgentResponse(BaseModel):
+    """Schema for agent response with answer and sources"""
+
+    answer: str = Field(description="Thr agent's answer to the query")
+    sources: List[Source] = Field(
+    )
+
 
 llm = ChatOpenAI(model="gpt-4o-mini")
 tools = [TavilySearch()]
+# agent = create_agent(model=llm, tools=tools)
 agent = create_agent(model=llm, tools=tools)
 
-
 def main():
-    print("Hello from react-search-agent!")
-    # result = agent.invoke({"messages": HumanMessage(content="What is the weather in India?")})
-    result = agent.invoke({"messages": HumanMessage(content="search for 3 job postings for an SDET engineer using langchain in the Bengaluru & Gurugram on linkedin and list their details")})
-    print(result["messages"][-1].content)
-
+    print("Hello from langchain-course!")
+    result = agent.invoke(
+        {
+            "messages": HumanMessage(
+                content="search for 3 job postings for an SDET engineer using langchain in the Bengaluru & Gurugram on linkedin and list their details"
+            )
+        }
+    )
+    print(result)
 
 if __name__ == "__main__":
     main()
