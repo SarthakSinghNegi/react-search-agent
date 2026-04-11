@@ -51,7 +51,7 @@ class AgentResponse(BaseModel):
 llm = ChatOpenAI(model="gpt-4o-mini")
 tools = [TavilySearch()]
 # agent = create_agent(model=llm, tools=tools)
-agent = create_agent(model=llm, tools=tools)
+agent = create_agent(model=llm, tools=tools, response_format=AgentResponse)
 
 def main():
     print("Hello from langchain-course!")
