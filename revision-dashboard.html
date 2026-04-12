@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Agent Learning Dashboard</title>
+  <style>
+    :root {
+      --bg: #070b16;
+      --panel: #0f172a;
+      --panel-2: #121c35;
+      --text: #e6edf9;
+      --muted: #9db1d1;
+      --primary: #4f8cff;
+      --accent: #26d7c6;
+      --pink: #d06bff;
+      --warning: #ffcb57;
+      --danger: #ff6b7d;
+      --ok: #29d391;
+      --border: rgba(142, 167, 212, 0.25);
+      --shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: "Inter", "Segoe UI", Roboto, system-ui, -apple-system, sans-serif;
+      background:
+        radial-gradient(1200px 700px at 100% -10%, rgba(79, 140, 255, 0.24), transparent 55%),
+        radial-gradient(900px 500px at -10% 10%, rgba(208, 107, 255, 0.2), transparent 50%),
+        var(--bg);
+      color: var(--text);
+      min-height: 100%;
+      scroll-behavior: smooth;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--border);
+      background: rgba(8, 13, 25, 0.8);
+      backdrop-filter: blur(8px);
+      padding: 24px 18px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .brand {
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: linear-gradient(130deg, rgba(79, 140, 255, 0.2), rgba(38, 215, 198, 0.18));
+      border: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 1.04rem;
+      letter-spacing: 0.4px;
+    }
+
+    .brand p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.45;
+    }
+
+    .nav {
+      display: grid;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .nav a {
+      text-decoration: none;
+      color: var(--muted);
+      border: 1px solid transparent;
+      padding: 10px 12px;
+      border-radius: 12px;
+      transition: 0.2s ease;
+      font-size: 0.92rem;
+    }
+
+    .nav a:hover,
+    .nav a.active {
+      color: var(--text);
+      border-color: var(--border);
+      background: rgba(79, 140, 255, 0.14);
+    }
+
+    .content {
+      padding: 26px;
+    }
+
+    .hero {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      background: linear-gradient(140deg, rgba(15, 23, 42, 0.95), rgba(18, 28, 53, 0.95));
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 18px;
+    }
+
+    .hero h2 {
+      margin: 0;
+      font-size: 1.8rem;
+      line-height: 1.2;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 920px;
+      line-height: 1.6;
+    }
+
+    .kpi-grid {
+      margin-top: 8px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+    }
+
+    .kpi {
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      padding: 14px;
+      background: rgba(10, 16, 31, 0.8);
+    }
+
+    .kpi .label {
+      color: var(--muted);
+      font-size: 0.82rem;
+      margin-bottom: 8px;
+    }
+
+    .kpi .value {
+      font-size: 1.46rem;
+      font-weight: 700;
+      color: #f6fbff;
+    }
+
+    .section {
+      margin-top: 22px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: rgba(11, 18, 35, 0.84);
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .section h3 {
+      margin: 0 0 10px;
+      font-size: 1.2rem;
+    }
+
+    .sub {
+      margin: 0 0 16px;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .tab-btn {
+      border: 1px solid var(--border);
+      background: rgba(79, 140, 255, 0.08);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(120deg, rgba(79, 140, 255, 0.35), rgba(38, 215, 198, 0.3));
+      border-color: rgba(79, 140, 255, 0.8);
+    }
+
+    .tab-panel {
+      display: none;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      background: rgba(6, 10, 21, 0.62);
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+    }
+
+    .flow .step {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      background: rgba(79, 140, 255, 0.08);
+      position: relative;
+    }
+
+    .flow .step strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    details {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: rgba(8, 13, 24, 0.72);
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+      color: #cde1ff;
+    }
+
+    details p {
+      color: var(--muted);
+      line-height: 1.6;
+      margin: 10px 0 0;
+      font-size: 0.94rem;
+    }
+
+    .checklist {
+      display: grid;
+      gap: 8px;
+    }
+
+    .check-item {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(7, 12, 23, 0.7);
+    }
+
+    .check-item input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--ok);
+    }
+
+    .progress {
+      margin-top: 12px;
+      border-radius: 999px;
+      height: 12px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+
+    .progress > span {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, var(--accent), var(--primary), var(--pink));
+      transition: width 0.3s ease;
+    }
+
+    .quiz {
+      display: grid;
+      gap: 12px;
+    }
+
+    .quiz .option {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      cursor: pointer;
+      background: rgba(10, 16, 30, 0.8);
+      transition: 0.2s ease;
+    }
+
+    .quiz .option:hover {
+      border-color: rgba(79, 140, 255, 0.9);
+      transform: translateY(-1px);
+    }
+
+    .option.correct {
+      border-color: rgba(41, 211, 145, 0.95);
+      background: rgba(41, 211, 145, 0.12);
+    }
+
+    .option.wrong {
+      border-color: rgba(255, 107, 125, 0.95);
+      background: rgba(255, 107, 125, 0.11);
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .footer-note {
+      margin-top: 22px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 0.84rem;
+    }
+
+    @media (max-width: 980px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+        height: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <h1>AI Agent Revision Hub</h1>
+        <p>Simple language. Deep clarity. Quick revision.</p>
+      </div>
+      <nav class="nav">
+        <a href="#overview" class="active">Overview</a>
+        <a href="#journey">Learning Journey</a>
+        <a href="#trace">LangSmith Clarity</a>
+        <a href="#errors">Common Errors</a>
+        <a href="#commands">Command Cheatsheet</a>
+        <a href="#quiz">Quick Quiz</a>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <section id="overview" class="hero">
+        <h2>From Basic Script to Smart Search Agent</h2>
+        <p>
+          You built a real AI workflow: load keys, create an LLM, give it web-search power, ask a job-search question,
+          and get structured output with answer + source links. You also learned how tracing works and how to debug runtime issues.
+        </p>
+        <div class="kpi-grid">
+          <div class="kpi">
+            <div class="label">Core Concepts Covered</div>
+            <div class="value" data-count="8">0</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Major Errors Fixed</div>
+            <div class="value" data-count="5">0</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Tools Used</div>
+            <div class="value" data-count="6">0</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Confidence Score</div>
+            <div class="value" data-count="92">0</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="journey" class="section">
+        <h3>Learning Journey (Simple View)</h3>
+        <p class="sub">Click each tab to revise the exact knowledge you built, step by step.</p>
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="t1">1. Setup</button>
+          <button class="tab-btn" data-tab="t2">2. Agent</button>
+          <button class="tab-btn" data-tab="t3">3. Structured Output</button>
+          <button class="tab-btn" data-tab="t4">4. Clean Printing</button>
+          <button class="tab-btn" data-tab="t5">5. Debugging</button>
+        </div>
+
+        <div id="t1" class="tab-panel active">
+          <div class="flow">
+            <div class="step"><strong>Step A</strong>Use `.env` to keep secrets private.</div>
+            <div class="step"><strong>Step B</strong>`load_dotenv()` loads keys into runtime.</div>
+            <div class="step"><strong>Step C</strong>`uv init` creates project files.</div>
+            <div class="step"><strong>Step D</strong>`uv sync` creates `.venv` and installs packages.</div>
+          </div>
+        </div>
+
+        <div id="t2" class="tab-panel">
+          <div class="flow">
+            <div class="step"><strong>Brain</strong>`ChatOpenAI(model="gpt-4o-mini")`</div>
+            <div class="step"><strong>Power-up</strong>`TavilySearch()` gives web search ability.</div>
+            <div class="step"><strong>Agent</strong>`create_agent(model=llm, tools=tools)`</div>
+            <div class="step"><strong>Run</strong>`agent.invoke(...)` with user question.</div>
+          </div>
+        </div>
+
+        <div id="t3" class="tab-panel">
+          <div class="cards">
+            <details open>
+              <summary>Why Pydantic?</summary>
+              <p>So output is clean and consistent. Instead of one big text blob, you get a clear object with known fields.</p>
+            </details>
+            <details>
+              <summary>What you defined</summary>
+              <p><strong>Source</strong> has `url`. <strong>AgentResponse</strong> has `answer` and `sources: List[Source]`.</p>
+            </details>
+            <details>
+              <summary>How it is enabled</summary>
+              <p>Pass `response_format=AgentResponse` in `create_agent(...)`.</p>
+            </details>
+            <details>
+              <summary>Where to read it</summary>
+              <p>Use `result["structured_response"]` for real typed output.</p>
+            </details>
+          </div>
+        </div>
+
+        <div id="t4" class="tab-panel">
+          <div class="flow">
+            <div class="step"><strong>Before</strong>`print(result["messages"][-1].content)` prints raw JSON-like text.</div>
+            <div class="step"><strong>After</strong>Use `structured_response.answer` and loop through `structured_response.sources`.</div>
+            <div class="step"><strong>Result</strong>Readable output for terminal, API, and frontend use.</div>
+          </div>
+        </div>
+
+        <div id="t5" class="tab-panel">
+          <div class="cards">
+            <details open>
+              <summary>Invalid OpenAI key (401)</summary>
+              <p>App cannot call model. Fix by updating `OPENAI_API_KEY` in `.env`.</p>
+            </details>
+            <details>
+              <summary>LangSmith forbidden (403)</summary>
+              <p>Tracing key/permissions issue. Agent still runs. Either fix key or set tracing false.</p>
+            </details>
+            <details>
+              <summary>Module not found</summary>
+              <p>Package missing in environment. Run `uv add ...` and `uv sync`.</p>
+            </details>
+            <details>
+              <summary>Unexpected indent / syntax issues</summary>
+              <p>Usually from pasted duplicate blocks or wrong indentation. Keep one clean invoke dictionary.</p>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <section id="trace" class="section">
+        <h3>LangSmith: Why Output Looks Different by Node</h3>
+        <p class="sub">
+          Top-level node and ChatOpenAI node show different things. This is expected behavior.
+        </p>
+        <div class="cards">
+          <details open>
+            <summary>Top-level LangGraph node</summary>
+            <p>Shows full workflow result. This is where `structured_response` appears with separate `answer` and `sources`.</p>
+          </details>
+          <details>
+            <summary>ChatOpenAI node</summary>
+            <p>Shows only one model call output + API metadata like tokens and model name. Not the final shaped object.</p>
+          </details>
+          <details>
+            <summary>Where did answer/sources go?</summary>
+            <p>Under top-level output, often inside <strong>Additional Fields</strong> depending on LangSmith UI version.</p>
+          </details>
+        </div>
+      </section>
+
+      <section id="errors" class="section">
+        <h3>Common Error Decoder</h3>
+        <p class="sub">Fast lookup table: what it means and what to do.</p>
+        <div class="cards">
+          <details open>
+            <summary>"python was not found in package registry"</summary>
+            <p>You ran `uv add ... python ...`. `python` is not added like normal package here. Use `python-dotenv`, not `python dotenv`.</p>
+          </details>
+          <details>
+            <summary>Deleted `.venv` and app broke</summary>
+            <p>Normal. `.venv` is re-creatable. Run `uv sync` or `uv run python main.py`.</p>
+          </details>
+          <details>
+            <summary>Output became ugly after response_format</summary>
+            <p>You printed raw message content. Print `result["structured_response"]` fields instead.</p>
+          </details>
+        </div>
+      </section>
+
+      <section id="commands" class="section">
+        <h3>Command Cheatsheet + Progress Tracker</h3>
+        <p class="sub">Tick what you understand. The progress bar updates automatically.</p>
+        <div class="checklist" id="checklist">
+          <label class="check-item"><input type="checkbox" /> `uv init` creates project setup files.</label>
+          <label class="check-item"><input type="checkbox" /> `uv sync` creates `.venv` and installs deps.</label>
+          <label class="check-item"><input type="checkbox" /> `uv add langchain langchain-openai python-dotenv langchain-tavily` adds deps.</label>
+          <label class="check-item"><input type="checkbox" /> `uv run python main.py` runs using local env.</label>
+          <label class="check-item"><input type="checkbox" /> `response_format=AgentResponse` gives structured output.</label>
+          <label class="check-item"><input type="checkbox" /> LangGraph top node is where final structured response appears in LangSmith.</label>
+        </div>
+        <div class="progress"><span id="progressBar"></span></div>
+      </section>
+
+      <section id="quiz" class="section">
+        <h3>Quick Quiz (1-minute confidence check)</h3>
+        <p class="sub">Pick one option. You get instant feedback.</p>
+        <div class="quiz">
+          <div class="hint">Q: If you use `response_format=AgentResponse`, where should you read final clean fields in code?</div>
+          <div class="option" data-correct="false">A) `result["messages"][-1].content` only</div>
+          <div class="option" data-correct="true">B) `result["structured_response"]` then `.answer` and `.sources`</div>
+          <div class="option" data-correct="false">C) `result["token_usage"]`</div>
+          <div class="hint" id="quizFeedback"></div>
+        </div>
+      </section>
+
+      <p class="footer-note">Built as your revision cockpit. Read, click, test, retain.</p>
+    </main>
+  </div>
+
+  <script>
+    const navLinks = document.querySelectorAll(".nav a");
+    const sections = document.querySelectorAll("main section");
+
+    function setActiveNav() {
+      let current = "";
+      sections.forEach((section) => {
+        const top = section.offsetTop - 120;
+        if (window.scrollY >= top) current = section.id;
+      });
+      navLinks.forEach((link) => {
+        link.classList.toggle("active", link.getAttribute("href") === "#" + current);
+      });
+    }
+
+    window.addEventListener("scroll", setActiveNav);
+    setActiveNav();
+
+    const counters = document.querySelectorAll("[data-count]");
+    counters.forEach((counter) => {
+      const end = Number(counter.dataset.count);
+      let n = 0;
+      const step = Math.max(1, Math.round(end / 30));
+      const timer = setInterval(() => {
+        n += step;
+        if (n >= end) {
+          n = end;
+          clearInterval(timer);
+        }
+        counter.textContent = n + (end === 92 ? "%" : "");
+      }, 28);
+    });
+
+    const tabButtons = document.querySelectorAll(".tab-btn");
+    const tabPanels = document.querySelectorAll(".tab-panel");
+    tabButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        tabButtons.forEach((b) => b.classList.remove("active"));
+        tabPanels.forEach((p) => p.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById(btn.dataset.tab).classList.add("active");
+      });
+    });
+
+    const checks = document.querySelectorAll("#checklist input");
+    const progressBar = document.getElementById("progressBar");
+
+    function updateProgress() {
+      const done = Array.from(checks).filter((i) => i.checked).length;
+      const total = checks.length;
+      progressBar.style.width = (done / total) * 100 + "%";
+    }
+
+    checks.forEach((check) => check.addEventListener("change", updateProgress));
+    updateProgress();
+
+    const options = document.querySelectorAll(".quiz .option");
+    const feedback = document.getElementById("quizFeedback");
+    options.forEach((option) => {
+      option.addEventListener("click", () => {
+        options.forEach((o) => o.classList.remove("correct", "wrong"));
+        const isCorrect = option.dataset.correct === "true";
+        option.classList.add(isCorrect ? "correct" : "wrong");
+        feedback.textContent = isCorrect
+          ? "Perfect. This is the exact structured-output access path."
+          : "Almost. Use result['structured_response'] for clean typed fields.";
+      });
+    });
+  </script>
+</body>
+</html>
