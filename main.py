@@ -1,68 +1,42 @@
-
-from typing import List
-from pydantic import BaseModel, Field
 from dotenv import load_dotenv
+from langchain_core.messages import HumanMessage
+from langgraph.graph import MessagesState, StateGraph, END
+
+from nodes import run_agent_reasoning, tool_node
 
 load_dotenv()
-from langchain.agents import create_agent
-# from langchain.tools import tool
-from langchain_core.messages import HumanMessage
-from langchain_openai import ChatOpenAI
-# from tavily import TavilyClient
-# from langchain_tavily import TavilySearchResults
-from langchain_tavily import TavilySearch
 
-# tavily = TavilyClient()
-# @tool
-# def search(query: str) -> str:
-#     """
-#     Tool that searches over internet
-#     Args:
-#         query: The query to search for
-#     Returns:
-#         The search result
-#     """
-#     print(f"Searching the web for: {query}")
-#     # return "India weather is sunny and give detailed description of the result"
-#     return tavily.search(query=query)
-
-#     # """Search the web for information"""
-#     # return "I found this information: " + query
-
-# with langchain-tavily we can search the web for information --> we don't need any tool for 
-# searching the web if using inbuilt tavily by langchain
+AGENT_REASON = "agent_reason"
+ACT = "act"
+LAST = -1
 
 
-class Source(BaseModel):
-    """Schema for a source used by the agent"""
-
-    url: str = Field(description="The URL of the source")
-
-
-class AgentResponse(BaseModel):
-    """Schema for agent response with answer and sources"""
-
-    answer: str = Field(description="Thr agent's answer to the query")
-    sources: List[Source] = Field(
-        default_factory=list, description="List of sources used to generate the answer"
-    )
+def should_continue(state: MessagesState) -> str:
+    if state["messages"][LAST].tool_calls:
+        return ACT
+    return "end"
 
 
-llm = ChatOpenAI(model="gpt-4o-mini")
-tools = [TavilySearch()]
-# agent = create_agent(model=llm, tools=tools)
-agent = create_agent(model=llm, tools=tools, response_format=AgentResponse)
+flow = StateGraph(MessagesState)
 
-def main():
-    print("Hello from langchain-course!")
-    result = agent.invoke(
-        {
-            "messages": HumanMessage(
-                content="search for 3 job postings for an SDET engineer using langchain in the Bengaluru & Gurugram on linkedin and list their details"
-            )
-        }
-    )
-    print(result)
+flow.add_node(AGENT_REASON, run_agent_reasoning)
+flow.add_node(ACT, tool_node)
+
+flow.set_entry_point(AGENT_REASON)
+
+flow.add_conditional_edges(
+    AGENT_REASON,
+    should_continue,
+    {"end": END, ACT: ACT},
+)
+
+flow.add_edge(ACT, AGENT_REASON)
+
+graph = flow.compile()
+
+graph.get_graph().draw_mermaid_png(output_file_path="flow.png")
 
 if __name__ == "__main__":
-    main()
+    print("Hello ReAct LangGraph with function calling")
+    res = graph.invoke({"messages": [HumanMessage(content="What is the temperature in Tokyo? List it and then triple it")]})
+    print(res["messages"][LAST].content)

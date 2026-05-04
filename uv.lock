@@ -1333,6 +1333,7 @@ dependencies = [
     { name = "langchain" },
     { name = "langchain-openai" },
     { name = "langchain-tavily" },
+    { name = "langgraph" },
     { name = "python-dotenv" },
     { name = "tavily-python" },
 ]
@@ -1344,6 +1345,7 @@ requires-dist = [
     { name = "langchain", specifier = ">=1.2.15" },
     { name = "langchain-openai", specifier = ">=1.1.12" },
     { name = "langchain-tavily", specifier = ">=0.2.17" },
+    { name = "langgraph", specifier = ">=0.4.0" },
     { name = "python-dotenv", specifier = ">=1.2.2" },
     { name = "tavily-python", specifier = ">=0.7.23" },
 ]

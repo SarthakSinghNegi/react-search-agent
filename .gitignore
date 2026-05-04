@@ -20,3 +20,7 @@ build/
 
 # OS
 .DS_Store
+
+# Personal notes
+COURSE-NOTES.md
+TA-AGENT-BRIEF.md
